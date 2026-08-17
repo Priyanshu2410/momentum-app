@@ -1,0 +1,71 @@
+name: momentum
+description: A personal Kanban for life. Local-only, offline-first.
+publish_to: "none"
+version: 1.0.0+1
+
+environment:
+  sdk: ">=3.3.0 <4.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # Database
+  drift: ^2.14.1
+  sqlite3_flutter_libs: ^0.5.15
+  path_provider: ^2.1.2
+  path: ^1.9.0
+
+  # State Management
+  flutter_riverpod: ^2.5.1
+  riverpod_annotation: ^2.3.5
+
+  # Notifications
+  flutter_local_notifications: ^17.1.2
+  timezone: ^0.9.3
+  # 2.x used the removed v1 embedding and cannot build on Flutter 3.47.
+  flutter_timezone: ^5.1.0
+
+  # Background Tasks
+  # 0.5.2 used the removed v1 embedding and cannot build on Flutter 3.47.
+  workmanager: ^0.10.7
+
+  # Navigation
+  go_router: ^13.2.1
+
+  # Animations
+  flutter_animate: ^4.5.0
+
+  # Date & Time
+  intl: ^0.19.0
+
+  # Settings
+  shared_preferences: ^2.2.3
+
+  # UI Utilities
+  gap: ^3.0.1
+
+  # Opens the release APK link so Android's installer can take over. The
+  # release check itself uses dart:io — no HTTP package needed.
+  url_launcher: ^6.2.6
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  drift_dev: ^2.14.1
+  build_runner: ^2.4.9
+  riverpod_generator: ^2.3.10
+  custom_lint: ^0.6.4
+  riverpod_lint: ^2.3.10
+  flutter_lints: ^3.0.0
+
+flutter:
+  uses-material-design: true
+
+  # Space Grotesk, as a variable font — one file carries the whole 300..700
+  # weight axis, so the w400/w500/w600 in AppTypography interpolate from it.
+  # OFL, from github.com/google/fonts; licence in assets/fonts/OFL.txt.
+  fonts:
+    - family: Space Grotesk
+      fonts:
+        - asset: assets/fonts/SpaceGrotesk.ttf

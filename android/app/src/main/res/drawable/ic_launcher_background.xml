@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The dark plate the raster launcher icon bakes in, as a drawable so the
+     adaptive background stays crisp at any mask size. Must match PLATE_HI /
+     PLATE_LO in tool/gen_icons.py. -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <gradient
+        android:angle="315"
+        android:startColor="#FF1A1D23"
+        android:endColor="#FF08090C"
+        android:type="linear" />
+</shape>

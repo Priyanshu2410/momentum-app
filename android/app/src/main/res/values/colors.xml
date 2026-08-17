@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- AppColors.background — keeps the launch window from flashing white
+         before Flutter's first frame. -->
+    <color name="momentum_background">#0A0A0C</color>
+</resources>
