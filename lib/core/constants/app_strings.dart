@@ -40,6 +40,8 @@ class AppStrings {
   static const landsInProgress = 'Starts now — goes straight to In Progress.';
   static String landsScheduled(String when) => 'Waits in Scheduled until $when.';
   static const noDueDate = 'No deadline';
+  /// Not "Now set to Now" — the label already reads as a phrase.
+  static String whenCurrent(String label) => 'Currently $label';
 
   // Detail
   static const addDescription = 'Add description...';

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_icons.dart';
 import '../../core/constants/app_spacing.dart';
+import '../../core/constants/app_strings.dart';
 import '../../core/constants/app_typography.dart';
 import '../../core/utils/date_utils.dart';
 import '../actions/task_actions.dart';
@@ -69,7 +70,7 @@ Future<WhenChoice?> showWhenPicker(
               ),
               const SizedBox(height: 4),
               Text(
-                'Now set to ${AppDates.whenLabel(initial, now)}',
+                AppStrings.whenCurrent(AppDates.whenLabel(initial, now)),
                 style: AppTypography.meta,
               ),
               const SizedBox(height: 16),

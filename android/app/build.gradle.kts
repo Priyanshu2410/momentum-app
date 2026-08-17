@@ -65,6 +65,11 @@ android {
 
     buildTypes {
         release {
+            // Appended to the rules Flutter already supplies. Without these,
+            // R8 breaks flutter_local_notifications' Gson store and no
+            // reminder ever fires — see proguard-rules.pro.
+            proguardFiles("proguard-rules.pro")
+
             // Falls back to the debug key when no keystore is configured, so a
             // fresh clone can still build a release APK — it just cannot ship
             // one that updates cleanly over a previous install.

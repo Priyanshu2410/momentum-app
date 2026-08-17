@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- These two are referenced only from Dart strings in
+     lib/services/notification_service.dart, so the release build's resource
+     shrinker sees no Java or XML pointing at them and deletes them. That made
+     `notifications.initialize()` throw invalid_icon on a release build, which
+     main() awaits before runApp — a permanent black screen on launch.
+
+     Anything new that is named as a string from Dart rather than referenced
+     from XML has to be listed here too. -->
+<resources
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:keep="@drawable/ic_notification,@drawable/ic_notification_large" />

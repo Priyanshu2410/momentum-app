@@ -41,11 +41,19 @@ Future<void> main() async {
   SystemChrome.setSystemUIOverlayStyle(AppTheme.systemOverlay);
 
   final notifications = NotificationService();
-  await notifications.initialize();
-  await notifications.requestPermissions();
 
-  // If a notification launched the app, open that task once the shell is up.
-  final launchTaskId = await notifications.launchTaskId();
+  // Everything here runs before runApp, so an exception is not a failed
+  // reminder — it is a permanent black screen on launch. A task list that
+  // opens without notifications beats one that does not open at all.
+  int? launchTaskId;
+  try {
+    await notifications.initialize();
+    await notifications.requestPermissions();
+    // If a notification launched the app, open that task once the shell is up.
+    launchTaskId = await notifications.launchTaskId();
+  } on Object catch (e, st) {
+    if (kDebugMode) debugPrint('[main] notification setup failed: $e\n$st');
+  }
 
   await _registerBackgroundPromotion();
 

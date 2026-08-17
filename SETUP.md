@@ -250,3 +250,39 @@ Both the repo name and the current version arrive via `--dart-define` from the
 workflow. A local build has neither, so **updates are switched off in debug
 builds** and the Settings row reads "Updates only work on release builds". That
 is expected, not a bug.
+
+### Two traps that only exist in release builds
+
+Flutter turns on R8 and resource shrinking for `--release`, so a debug build
+proves nothing about either of these. Both were found by installing v1.0.0 on an
+emulator and reading logcat — the app showed a black screen and said nothing.
+
+**1. Resources named only from Dart get deleted.** The shrinker scans Java and
+XML. `ic_notification` and `ic_notification_large` are referenced only as strings
+in `notification_service.dart`, so it removed them, and
+`notifications.initialize()` threw `invalid_icon`. Because `main()` awaits that
+before `runApp`, the result was a permanent black screen on launch.
+
+Anything new that Dart names as a string has to be listed in
+`android/app/src/main/res/raw/keep.xml`.
+
+**2. R8 breaks flutter_local_notifications' Gson store.** Its pending-reminder
+store is JSON via Gson, which needs generic signatures that R8 strips:
+
+```
+java.lang.RuntimeException: Missing type parameter.
+```
+
+This one is worse than a crash — `NotificationService` catches it, so the app
+runs fine and simply never fires a reminder. `android/app/proguard-rules.pro`
+keeps the signatures. Verify it survived a change with:
+
+```bash
+adb shell dumpsys alarm | grep -A1 com.momentum.momentum
+```
+
+A task scheduled an hour out should show an `RTC_WAKEUP` alarm ~59 minutes away.
+No alarm means the store is broken again.
+
+`main()` now also wraps notification setup in a try/catch, so no future plugin
+failure can black-screen the app — it just starts without reminders.
