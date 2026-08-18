@@ -64,4 +64,6 @@ class AppStrings {
   static String updateVersions(String from, String to) => '$from  →  $to';
   static const updateDownload = 'Download';
   static const updateLater = 'Later';
+  static const updateOpenFailed =
+      'Could not open the download. Grab it from the Releases page.';
 }

@@ -50,9 +50,11 @@ class UpdateService {
       );
       if (since < _checkInterval) return null;
     }
+    final update = await check();
+    // Stamped only after the call came back, so a launch with no signal does
+    // not burn the day's one check.
     await prefs.setInt(_lastCheckKey, DateTime.now().millisecondsSinceEpoch);
-
-    return check();
+    return update;
   }
 
   /// Unthrottled — what the Settings row calls. Throws nothing; logs instead.

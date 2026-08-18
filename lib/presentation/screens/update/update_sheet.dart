@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -29,13 +30,24 @@ Future<void> showUpdateSheet(
   ref.read(sheetOpenProvider.notifier).state = false;
 }
 
-class _UpdateSheet extends StatelessWidget {
+class _UpdateSheet extends StatefulWidget {
   const _UpdateSheet({required this.update});
 
   final AppUpdate update;
 
   @override
+  State<_UpdateSheet> createState() => _UpdateSheetState();
+}
+
+class _UpdateSheetState extends State<_UpdateSheet> {
+  /// Set when the browser could not be opened. Shown inline rather than as a
+  /// toast: this sheet is a modal route above the shell, so a toast painted by
+  /// the shell would sit behind it and never be seen.
+  bool _failed = false;
+
+  @override
   Widget build(BuildContext context) {
+    final update = widget.update;
     return Container(
       decoration: const BoxDecoration(
         color: AppColors.surface1,
@@ -101,12 +113,26 @@ class _UpdateSheet extends StatelessWidget {
                     ),
                   ),
                 ],
+                if (_failed) ...[
+                  const SizedBox(height: 16),
+                  Text(
+                    AppStrings.updateOpenFailed,
+                    style: AppTypography.fieldValue
+                        .copyWith(color: AppColors.statusOverdue),
+                  ),
+                  const SizedBox(height: 6),
+                  // The link itself, so it is still reachable by hand.
+                  SelectableText(
+                    update.downloadUrl,
+                    style: AppTypography.meta,
+                  ),
+                ],
                 const SizedBox(height: 22),
                 Row(
                   children: [
                     Expanded(
                       child: GestureDetector(
-                        onTap: () => _download(context),
+                        onTap: _download,
                         behavior: HitTestBehavior.opaque,
                         child: Container(
                           height: 50,
@@ -149,11 +175,24 @@ class _UpdateSheet extends StatelessWidget {
     );
   }
 
-  Future<void> _download(BuildContext context) async {
-    final opened = await launchUrl(
-      Uri.parse(update.downloadUrl),
-      mode: LaunchMode.externalApplication,
-    );
-    if (opened && context.mounted) Navigator.of(context).pop();
+  Future<void> _download() async {
+    var opened = false;
+    try {
+      opened = await launchUrl(
+        Uri.parse(widget.update.downloadUrl),
+        mode: LaunchMode.externalApplication,
+      );
+    } on Object catch (e) {
+      if (kDebugMode) debugPrint('[update] launch failed: $e');
+    }
+
+    if (!mounted) return;
+    if (opened) {
+      Navigator.of(context).pop();
+      return;
+    }
+    // Failing silently here is what made a missing manifest query look like a
+    // dead button.
+    setState(() => _failed = true);
   }
 }

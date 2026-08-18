@@ -63,5 +63,12 @@
             <action android:name="android.intent.action.PROCESS_TEXT"/>
             <data android:mimeType="text/plain"/>
         </intent>
+        <!-- Without this, Android 11+ package-visibility filtering hides every
+             browser from the app, so url_launcher cannot open the release APK
+             link and the update sheet's Download button does nothing at all. -->
+        <intent>
+            <action android:name="android.intent.action.VIEW"/>
+            <data android:scheme="https"/>
+        </intent>
     </queries>
 </manifest>

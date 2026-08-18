@@ -286,3 +286,13 @@ No alarm means the store is broken again.
 
 `main()` now also wraps notification setup in a try/catch, so no future plugin
 failure can black-screen the app — it just starts without reminders.
+
+**3. Android 11+ hides other apps unless you declare them.** The update sheet's
+Download button did nothing on a real phone: package-visibility filtering meant
+`url_launcher` could not see a single browser, so `launchUrl` returned false.
+The `<queries>` block in the manifest needs an `android.intent.action.VIEW` +
+`https` entry. Confirmed by A/B on one device — without it, tapping Download
+fires zero VIEW intents; with it, Chrome opens the APK link.
+
+Anything else the app hands off to another app (email, maps, dialler) needs its
+own entry there too.
