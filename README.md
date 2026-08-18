@@ -30,6 +30,9 @@ only scheduling decision the app asks you to make.
   land before the task begins.
 - **Reminders with something to say.** A task starting fires a real notification
   with a motivational line, not a bare title. Overdue tasks say so.
+- **A nightly nudge.** Pick a time and Momentum tells you what is still in
+  progress — task names and all, not just a count. Off by default; set it in
+  Settings.
 - **Promotes itself.** *Scheduled* becomes *In Progress* when its time arrives,
   and *In Progress* becomes *Overdue* when its due time passes — on a background
   job, on resume, and at launch.

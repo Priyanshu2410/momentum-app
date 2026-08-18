@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import '../enums/repeat_type.dart';
 import '../enums/task_label.dart';
 import '../enums/task_priority.dart';
@@ -86,9 +88,33 @@ class Task {
     );
   }
 
+  /// Full value equality, not just the id.
+  ///
+  /// Riverpod only notifies listeners when a provider's new value `!=` the old
+  /// one. While this compared ids alone, an edited task looked identical to the
+  /// one it replaced, so `taskByIdProvider` never fired and the detail sheet
+  /// showed a stale status after you tapped one.
   @override
-  bool operator ==(Object other) => other is Task && other.id == id;
+  bool operator ==(Object other) =>
+      other is Task &&
+      other.id == id &&
+      other.title == title &&
+      other.description == description &&
+      other.status == status &&
+      other.priority == priority &&
+      other.label == label &&
+      other.repeatType == repeatType &&
+      other.startDateTime == startDateTime &&
+      other.dueDateTime == dueDateTime &&
+      other.createdAt == createdAt &&
+      other.completedAt == completedAt &&
+      // repeatConfig is JSON-decoded, so encoding both sides is a cheap deep
+      // compare. A key-order difference would only cost one extra rebuild.
+      jsonEncode(other.repeatConfig) == jsonEncode(repeatConfig);
 
+  /// repeatConfig is deliberately left out — equal objects still hash equal,
+  /// and a Map has no stable hash of its own.
   @override
-  int get hashCode => id.hashCode;
+  int get hashCode => Object.hash(id, title, description, status, priority,
+      label, repeatType, startDateTime, dueDateTime, createdAt, completedAt);
 }

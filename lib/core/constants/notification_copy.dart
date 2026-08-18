@@ -68,6 +68,26 @@ class NotificationCopy {
     };
   }
 
+  /// The daily "what is still open" summary. [titles] is already trimmed to
+  /// what will fit; [count] is the true total so the headline stays honest when
+  /// there are more.
+  static NotificationCopy digest(int count, List<String> titles, int dayOfYear) {
+    final plural = count == 1 ? 'task' : 'tasks';
+    final listed = titles.map((t) => '&bull; ${escape(t)}').join('<br>');
+    final more = count > titles.length
+        ? '<br><i>...and ${count - titles.length} more</i>'
+        : '';
+
+    return NotificationCopy(
+      title: '\u{1F319} $count $plural still open',
+      body: titles.isEmpty ? 'Time for a look at your list.' : titles.first,
+      bigText: '<b>Still in progress:</b><br>$listed$more<br><br>'
+          '<i>${quotes[dayOfYear % quotes.length]}</i>',
+      summary: 'Daily check-in',
+      ticker: '$count $plural still in progress',
+    );
+  }
+
   /// Deterministic pick, so re-scheduling the same reminder does not reshuffle
   /// the line and the tests can assert on it.
   static String quoteFor(int taskId, NotificationKind kind) =>

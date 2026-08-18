@@ -6,6 +6,7 @@ import 'core/constants/app_strings.dart';
 import 'core/theme/app_theme.dart';
 import 'presentation/providers/ui_feedback_provider.dart';
 import 'presentation/screens/shell/app_shell.dart';
+import 'presentation/widgets/momentum_splash.dart';
 
 /// Two routes: the shell, and a deep link that hands a task id to the shell.
 /// `/task/:id` redirects rather than pushing a page, so a notification tap
@@ -14,7 +15,10 @@ final routerProvider = Provider<GoRouter>((ref) {
   return GoRouter(
     initialLocation: '/',
     routes: [
-      GoRoute(path: '/', builder: (_, __) => const AppShell()),
+      GoRoute(
+        path: '/',
+        builder: (_, __) => const MomentumSplash(child: AppShell()),
+      ),
       GoRoute(
         path: '/task/:id',
         redirect: (_, state) {

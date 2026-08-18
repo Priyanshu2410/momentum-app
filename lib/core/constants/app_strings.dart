@@ -52,6 +52,8 @@ class AppStrings {
   static const settings = 'Settings';
   static const autoPromote = 'Auto-promote scheduled tasks';
   static const pushNotifications = 'Push notifications';
+  static const dailyDigest = 'Daily open-task reminder';
+  static const digestOff = 'Off';
   static const checkForUpdates = 'Check for updates';
   static const checking = 'Checking...';
   static const upToDate = 'You are on the latest version';

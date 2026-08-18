@@ -332,24 +332,24 @@ class _StatusSelector extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return SizedBox(
-      height: 28,
-      child: ListView.separated(
-        scrollDirection: Axis.horizontal,
-        itemCount: TaskStatus.values.length,
-        separatorBuilder: (_, __) => const SizedBox(width: 8),
-        itemBuilder: (context, i) {
-          final status = TaskStatus.values[i];
-          return FilterPill(
+    // A Wrap, not a horizontal list: the list put "Done" off the right edge, so
+    // changing a task to Done meant finding a sideways scroll inside a sheet
+    // that already scrolls vertically. Every status is now visible and one tap
+    // away, which beats a dropdown for the same job.
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      children: [
+        for (final status in TaskStatus.values)
+          FilterPill(
             label: status.label,
             active: task.status == status,
             accent: status.color,
             dotColor: status.color,
-            height: 28,
+            height: 30,
             onTap: () => ref.setTaskStatus(task, status),
-          );
-        },
-      ),
+          ),
+      ],
     );
   }
 }

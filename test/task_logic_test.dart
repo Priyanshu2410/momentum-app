@@ -260,6 +260,60 @@ void main() {
     });
   });
 
+  group('Task equality', () {
+    // Riverpod skips notifying listeners when the new value == the old one, so
+    // id-only equality left the detail sheet showing a stale status.
+    test('a status change makes the task unequal', () {
+      final task = _task(status: TaskStatus.inProgress, start: now);
+      expect(task == task.copyWith(status: TaskStatus.done), isFalse);
+    });
+
+    test('a retitle or a moved start time counts as a change', () {
+      final task = _task(status: TaskStatus.inProgress, start: now);
+      expect(task == task.copyWith(title: 'Renamed'), isFalse);
+      expect(task == task.copyWith(startDateTime: future), isFalse);
+      expect(task == task.copyWith(dueDateTime: future), isFalse);
+    });
+
+    test('an untouched copy is still equal', () {
+      final task = _task(status: TaskStatus.inProgress, start: now);
+      expect(task == task.copyWith(), isTrue);
+      expect(task.hashCode, task.copyWith().hashCode);
+    });
+
+    test('repeat config is compared by content', () {
+      final task = _task(
+          status: TaskStatus.inProgress, start: now, config: {'days': [1, 3]});
+      expect(task == task.copyWith(repeatConfig: {'days': [1, 3]}), isTrue);
+      expect(task == task.copyWith(repeatConfig: {'days': [2]}), isFalse);
+    });
+  });
+
+  group('daily digest copy', () {
+    test('headline counts everything, body lists only what fits', () {
+      final copy = NotificationCopy.digest(
+          5, ['Alpha', 'Beta', 'Gamma'], 3);
+      expect(copy.title, contains('5 tasks'));
+      expect(copy.bigText, contains('Alpha'));
+      expect(copy.bigText, contains('and 2 more'));
+      expect(copy.summary, 'Daily check-in');
+    });
+
+    test('one task is not "1 tasks"', () {
+      expect(NotificationCopy.digest(1, ['Solo'], 0).title, contains('1 task '));
+    });
+
+    test('does not claim extras when everything is listed', () {
+      final copy = NotificationCopy.digest(2, ['One', 'Two'], 0);
+      expect(copy.bigText, isNot(contains('more')));
+    });
+
+    test('escapes titles before the HTML body', () {
+      final copy = NotificationCopy.digest(1, ['Pay <b>rent</b>'], 0);
+      expect(copy.bigText, contains('Pay &lt;b&gt;rent&lt;/b&gt;'));
+    });
+  });
+
   group('notification copy', () {
     test('escapes a title before it reaches the HTML big-text body', () {
       final copy = NotificationCopy.forKind(

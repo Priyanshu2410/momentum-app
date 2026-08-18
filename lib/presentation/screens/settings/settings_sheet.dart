@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/constants/app_colors.dart';
+import '../../../core/constants/app_icons.dart';
 import '../../../core/constants/app_spacing.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/constants/app_typography.dart';
@@ -81,6 +82,10 @@ class SettingsSheet extends ConsumerWidget {
                   value: settings.pushEnabled,
                   onChanged: notifier.setPushEnabled,
                 ),
+                _DigestRow(
+                  minutes: settings.digestMinutes,
+                  onChanged: notifier.setDigestMinutes,
+                ),
                 const _UpdateRow(),
               ],
             ),
@@ -88,6 +93,69 @@ class SettingsSheet extends ConsumerWidget {
         ],
       ),
     );
+  }
+}
+
+/// Sets the time of the daily "still open" summary. Tapping the time opens a
+/// picker; tapping the value when one is set clears it.
+class _DigestRow extends StatelessWidget {
+  const _DigestRow({required this.minutes, required this.onChanged});
+
+  final int? minutes;
+  final ValueChanged<int?> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final on = minutes != null;
+
+    return GestureDetector(
+      onTap: () => _pick(context),
+      behavior: HitTestBehavior.opaque,
+      child: SizedBox(
+        height: 52,
+        child: Row(
+          children: [
+            Expanded(
+              child: Text(
+                AppStrings.dailyDigest,
+                style: AppTypography.fieldLabel
+                    .copyWith(color: AppColors.textPrimary),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Text(
+              on ? _format(minutes!) : AppStrings.digestOff,
+              style: AppTypography.fieldValue.copyWith(
+                color: on ? AppColors.accent : AppColors.textMuted,
+              ),
+            ),
+            if (on) ...[
+              const SizedBox(width: 10),
+              GestureDetector(
+                onTap: () => onChanged(null),
+                behavior: HitTestBehavior.opaque,
+                child: const Icon(AppIcons.close,
+                    size: 16, color: AppColors.textMuted),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  static String _format(int minutes) =>
+      '${(minutes ~/ 60).toString().padLeft(2, '0')}:'
+      '${(minutes % 60).toString().padLeft(2, '0')}';
+
+  Future<void> _pick(BuildContext context) async {
+    final picked = await showTimePicker(
+      context: context,
+      initialTime: minutes == null
+          ? const TimeOfDay(hour: 22, minute: 0)
+          : TimeOfDay(hour: minutes! ~/ 60, minute: minutes! % 60),
+    );
+    if (picked != null) onChanged(picked.hour * 60 + picked.minute);
   }
 }
 

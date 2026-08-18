@@ -149,6 +149,62 @@ class NotificationService {
     }
   }
 
+  /// Fixed id for the daily digest. Task ids derive theirs from the row id
+  /// (`id * 2` and `id * 2 + 1`), so this sits far above any of them.
+  static const digestNotificationId = 900001;
+
+  /// Daily "what is still open" summary at [minutesSinceMidnight].
+  ///
+  /// Re-armed on every scheduler pass rather than left to repeat forever, so
+  /// the listed tasks are current — a notification handed to the OS carries
+  /// fixed text, and a week-old summary would be worse than none.
+  Future<void> scheduleDailyDigest({
+    required int minutesSinceMidnight,
+    required int openCount,
+    required List<String> titles,
+  }) async {
+    await cancelDailyDigest();
+    // Nothing open is not worth a buzz.
+    if (openCount == 0) return;
+
+    final now = DateTime.now();
+    var when = DateTime(now.year, now.month, now.day,
+        minutesSinceMidnight ~/ 60, minutesSinceMidnight % 60);
+    if (!when.isAfter(now)) when = when.add(const Duration(days: 1));
+
+    final copy = NotificationCopy.digest(
+      openCount,
+      titles,
+      _dayOfYear(when),
+    );
+
+    try {
+      await _plugin.zonedSchedule(
+        digestNotificationId,
+        copy.title,
+        copy.body,
+        tz.TZDateTime.from(when, tz.local),
+        _detailsFor(copy),
+        androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+        uiLocalNotificationDateInterpretation:
+            UILocalNotificationDateInterpretation.absoluteTime,
+      );
+    } on Object catch (e) {
+      _log('digest schedule failed: $e');
+    }
+  }
+
+  Future<void> cancelDailyDigest() async {
+    try {
+      await _plugin.cancel(digestNotificationId);
+    } on Object catch (e) {
+      _log('digest cancel failed: $e');
+    }
+  }
+
+  static int _dayOfYear(DateTime d) =>
+      d.difference(DateTime(d.year)).inDays;
+
   Future<void> cancelTaskNotifications(int taskId) async {
     try {
       await _plugin.cancel(taskId * 2);

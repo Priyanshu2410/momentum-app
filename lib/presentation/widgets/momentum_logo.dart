@@ -14,24 +14,36 @@ import '../../core/constants/app_typography.dart';
 ///
 /// Drawn rather than shipped as an asset: an arc, a dot and three points.
 class MomentumMark extends StatelessWidget {
-  const MomentumMark({this.size = 22, this.glow = true, super.key});
+  const MomentumMark({
+    this.size = 22,
+    this.glow = true,
+    this.progress = 1,
+    super.key,
+  });
 
   final double size;
   final bool glow;
+
+  /// 0 draws nothing, 1 draws the finished mark. Between the two the ring
+  /// sweeps round and the check strokes in behind it — see [MomentumSplash].
+  final double progress;
 
   @override
   Widget build(BuildContext context) {
     return SizedBox.square(
       dimension: size,
-      child: CustomPaint(painter: _MarkPainter(glow: glow)),
+      child: CustomPaint(
+        painter: _MarkPainter(glow: glow, progress: progress),
+      ),
     );
   }
 }
 
 class _MarkPainter extends CustomPainter {
-  const _MarkPainter({required this.glow});
+  const _MarkPainter({required this.glow, this.progress = 1});
 
   final bool glow;
+  final double progress;
 
   // Geometry, in the 0..100 box the icon generator uses.
   static const _centre = Offset(50, 50);
@@ -58,7 +70,11 @@ class _MarkPainter extends CustomPainter {
       radius: _radius * unit,
     );
     const start = _startDegrees * math.pi / 180;
-    const sweep = _sweepDegrees * math.pi / 180;
+    const fullSweep = _sweepDegrees * math.pi / 180;
+    final ringT = (progress / 0.7).clamp(0.0, 1.0);
+    final sweep = fullSweep * ringT;
+    // Overlaps the ring's last stretch, so it reads as one gesture.
+    final checkT = ((progress - 0.55) / 0.45).clamp(0.0, 1.0);
 
     final ring = Paint()
       ..shader = const LinearGradient(colors: [_tealHi, _tealLo])
@@ -81,31 +97,45 @@ class _MarkPainter extends CustomPainter {
     }
     canvas.drawArc(box, start, sweep, false, ring);
 
-    // Spark at the head of the ring — where the progress stopped.
-    const head = start + sweep;
+    // Spark rides the head of the ring while it draws.
+    final head = start + sweep;
     canvas.drawCircle(
       box.center + Offset(math.cos(head), math.sin(head)) * _radius * unit,
       _sparkRadius * unit,
       Paint()..color = _tealHi,
     );
 
+    if (checkT <= 0) return;
+
     final check = Path()..moveTo(_check.first.dx * unit, _check.first.dy * unit);
     for (final p in _check.skip(1)) {
       check.lineTo(p.dx * unit, p.dy * unit);
     }
-    canvas.drawPath(
-      check,
-      Paint()
-        ..color = AppColors.textPrimary
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = _checkStroke * unit
-        ..strokeCap = StrokeCap.round
-        ..strokeJoin = StrokeJoin.round,
-    );
+
+    final checkPaint = Paint()
+      ..color = AppColors.textPrimary
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = _checkStroke * unit
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round;
+
+    if (checkT >= 1) {
+      canvas.drawPath(check, checkPaint);
+      return;
+    }
+    // Trim the path instead of fading it, so the tick is drawn on rather than
+    // appearing all at once.
+    for (final metric in check.computeMetrics()) {
+      canvas.drawPath(
+        metric.extractPath(0, metric.length * checkT),
+        checkPaint,
+      );
+    }
   }
 
   @override
-  bool shouldRepaint(_MarkPainter old) => old.glow != glow;
+  bool shouldRepaint(_MarkPainter old) =>
+      old.glow != glow || old.progress != progress;
 }
 
 /// Mark plus wordmark, centred — the brand strip that sits above every tab.

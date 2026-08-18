@@ -24,6 +24,21 @@ class SettingsNotifier extends Notifier<AppSettingsSnapshot> {
   Future<void> setPushEnabled(bool value) async {
     state = state.copyWith(pushEnabled: value);
     await _service.setPushEnabled(value);
+    await _rearmDigest();
+  }
+
+  /// [minutes] since midnight, or null to switch the digest off.
+  Future<void> setDigestMinutes(int? minutes) async {
+    state = state.copyWith(digestMinutes: minutes);
+    await _service.setDigestMinutes(minutes);
+    await _rearmDigest();
+  }
+
+  /// A scheduler pass is what actually hands the digest to the OS, so changing
+  /// the time has to run one — otherwise nothing happens until the next
+  /// 15-minute job.
+  Future<void> _rearmDigest() async {
+    await ref.read(taskSchedulerProvider).sync(settings: state);
   }
 }
 

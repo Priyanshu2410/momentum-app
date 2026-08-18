@@ -100,6 +100,7 @@ class TaskSchedulerService {
           if (settings.pushEnabled) await _notifications.showOverdueNow(task);
         }
       }
+      await _armDailyDigest(settings);
     } on Object catch (e, st) {
       // A failed background pass must not take the app down; the next run
       // picks up whatever was missed.
@@ -107,5 +108,30 @@ class TaskSchedulerService {
     }
 
     return SchedulerResult(promoted: promoted, expired: expired);
+  }
+
+  /// Re-arms the daily summary from the *current* set of in-progress tasks.
+  ///
+  /// A scheduled notification's text is fixed the moment the OS takes it, so a
+  /// repeating one would read out whatever was open the day it was set. This
+  /// runs on every pass — launch, resume, and the 15-minute job — so what it
+  /// says is never more than one pass stale.
+  Future<void> _armDailyDigest(AppSettingsSnapshot settings) async {
+    final minutes = settings.digestMinutes;
+    if (minutes == null || !settings.pushEnabled) {
+      await _notifications.cancelDailyDigest();
+      return;
+    }
+
+    final open = (await _db.tasksDao.allActive())
+        .where((t) => t.status == TaskStatus.inProgress)
+        .toList();
+
+    await _notifications.scheduleDailyDigest(
+      minutesSinceMidnight: minutes,
+      openCount: open.length,
+      // Three keeps the expanded card readable; the headline carries the total.
+      titles: open.take(3).map((t) => t.title).toList(),
+    );
   }
 }
